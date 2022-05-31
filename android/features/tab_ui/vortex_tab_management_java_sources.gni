@@ -1,0 +1,5 @@
+# Copyright 2022 Vortex Browser. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+vortex_public_tab_management_java_sources = [ "//vortex/android/features/tab_ui/java/src/org/chromium/chrome/browser/tasks/tab_management/VortexTabUiFeatureUtilities.java" ]
