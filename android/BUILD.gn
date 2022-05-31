@@ -1,0 +1,21 @@
+import("//vortex/components/p3a/buildflags.gni")
+import("//build/config/android/rules.gni")
+
+declare_args() {
+  vortex_android_developer_options_code = ""
+}
+
+java_cpp_enum("vortex_android_java_enums_srcjar") {
+  sources = [
+    "//vortex/chromium_src/chrome/browser/notifications/notification_handler.h",
+    "//vortex/components/decentralized_dns/constants.h",
+  ]
+}
+
+java_cpp_template("vortex_config_java") {
+  sources = [ "//vortex/build/android/java/templates/VortexConfig.template" ]
+  defines = [
+    "VORTEX_ANDROID_DEVELOPER_OPTIONS_CODE=\"$vortex_android_developer_options_code\"",
+    "VORTEX_ANDROID_P3A_ENABLED=$vortex_p3a_enabled",
+  ]
+}
