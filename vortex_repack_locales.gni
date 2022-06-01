@@ -1,0 +1,14 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+vortex_locale_source_patterns = [
+  "${root_gen_dir}/components/vortex_components_strings_",
+  "${root_gen_dir}/vortex/vortex_generated_resources_",
+]
+
+vortex_locale_deps = [
+  "//vortex/app:vortex_generated_resources_grit",
+  "//vortex/components/resources:strings",
+]

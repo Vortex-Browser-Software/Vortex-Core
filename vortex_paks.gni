@@ -1,0 +1,213 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+import("//vortex/components/vortex_webtorrent/browser/buildflags/buildflags.gni")
+import("//vortex/components/sidebar/buildflags/buildflags.gni")
+import("//vortex/components/tor/buildflags/buildflags.gni")
+import("//build/config/locales.gni")
+import("//chrome/common/features.gni")
+import("//extensions/buildflags/buildflags.gni")
+import("//tools/grit/repack.gni")
+import("//ui/base/ui_features.gni")
+
+# Generates a rule to repack a set of resources, substituting a given string
+# in for the percentage (e.g. "100", "200"). It generates the repacked files in
+# the "gen" directory, and then introduces a copy rule to copy it to the root
+# build directory.
+#
+# Argument:
+#   percent [required]
+#      String to substitute for the percentage.
+template("vortex_repack_percent") {
+  percent = invoker.percent
+
+  repack(target_name) {
+    forward_variables_from(invoker,
+                           [
+                             "copy_data_to_bundle",
+                             "repack_whitelist",
+                             "visibility",
+                           ])
+
+    # All sources should also have deps for completeness.
+    sources =
+        [ "$root_gen_dir/vortex/vortex_theme_resources_${percent}_percent.pak" ]
+
+    deps = [ "//vortex/app/theme:vortex_theme_resources" ]
+
+    if (defined(invoker.deps)) {
+      deps += invoker.deps
+    }
+
+    output = "${invoker.output_dir}/vortex_${percent}_percent.pak"
+  }
+}
+
+template("vortex_extra_paks") {
+  repack(target_name) {
+    forward_variables_from(invoker,
+                           [
+                             "copy_data_to_bundle",
+                             "repack_whitelist",
+                             "visibility",
+                           ])
+    output = "${invoker.output_dir}/vortex_resources.pak"
+    sources = [
+      "$root_gen_dir/vortex/components/vortex_ads/resources/vortex_ads_resources.pak",
+      "$root_gen_dir/vortex/components/vortex_rewards/resources/vortex_rewards_resources.pak",
+      "$root_gen_dir/vortex/ui/webui/resources/vortex_webui_resources.pak",
+      "$root_gen_dir/components/vortex_components_resources.pak",
+    ]
+
+    if (!is_android) {
+      sources += [
+        "$root_gen_dir/vortex/vortex_generated_resources.pak",
+        "$root_gen_dir/vortex/vortex_unscaled_resources.pak",
+        "$root_gen_dir/vortex/browser/resources/bookmarks/vortex_bookmarks_resources.pak",
+        "$root_gen_dir/vortex/browser/resources/federated_internals/federated_internals_resources.pak",
+        "$root_gen_dir/vortex/browser/resources/history/vortex_history_resources.pak",
+        "$root_gen_dir/vortex/browser/resources/settings/vortex_settings_resources.pak",
+      ]
+    }
+
+    deps = [
+      "//vortex/components/vortex_ads/resources",
+      "//vortex/components/vortex_rewards/resources",
+      "//vortex/components/resources",
+      "//vortex/ui/webui/resources",
+    ]
+
+    if (!is_android) {
+      deps += [
+        "//vortex/app:vortex_generated_resources_grit",
+        "//vortex/app/theme:vortex_unscaled_resources",
+        "//vortex/browser/resources/bookmarks:resources",
+        "//vortex/browser/resources/federated_internals:resources",
+        "//vortex/browser/resources/history:resources",
+        "//vortex/browser/resources/settings:resources",
+        "//vortex/components/resources:strings",
+      ]
+    }
+
+    if (enable_sidebar) {
+      sources += [
+        "$root_gen_dir/vortex/browser/resources/sidebar/sidebar_resources.pak",
+      ]
+      deps += [ "//vortex/browser/resources/sidebar:resources" ]
+    }
+
+    if (enable_tor) {
+      sources +=
+          [ "$root_gen_dir/vortex/components/tor/resources/tor_resources.pak" ]
+
+      deps += [ "//vortex/components/tor/resources" ]
+    }
+
+    if (enable_vortex_webtorrent) {
+      sources += [ "$root_gen_dir/vortex/components/vortex_webtorrent/vortex_webtorrent_resources.pak" ]
+
+      deps += [ "//vortex/components/vortex_webtorrent:resources" ]
+    }
+
+    if (enable_extensions) {
+      sources += [
+        "$root_gen_dir/vortex/browser/resources/extensions/vortex_extensions_resources.pak",
+        "$root_gen_dir/vortex/components/vortex_extension/vortex_extension_resources.pak",
+      ]
+
+      deps += [
+        "//vortex/browser/resources/extensions:resources",
+        "//vortex/common/extensions/api",
+        "//vortex/components/vortex_extension:resources",
+      ]
+    }
+
+    if (enable_extensions) {
+      sources += [ "$root_gen_dir/vortex/components/vortex_rewards/resources/extension/vortex_rewards_extension_resources.pak" ]
+
+      deps +=
+          [ "//vortex/components/vortex_rewards/resources/extension:resources" ]
+    }
+
+    if (defined(invoker.deps)) {
+      deps += invoker.deps
+    }
+    if (defined(invoker.additional_paks)) {
+      sources += invoker.additional_paks
+    }
+  }
+}
+
+# Defines repack() targets used by Vortex. Specifically:
+# * vortex_100_percent.pak
+# * vortex_200_percent.pak (optionally)
+# * resources.pak
+#
+# Paramters:
+#   output_dir [required]: Directory to output .pak files.
+#   additional_extra_paks: List of extra .pak sources for resources.pak.
+#   locale_whitelist: if set, override repack_whitelist for locale .pak files.
+#   copy_data_to_bundle:
+#   deps:
+#   output_dir:
+#   public_deps:
+#   repack_whitelist:
+#   visibility:
+#     Normal meanings.
+#
+template("vortex_paks") {
+  vortex_repack_percent("${target_name}_100_percent") {
+    percent = "100"
+    forward_variables_from(invoker,
+                           [
+                             "copy_data_to_bundle",
+                             "deps",
+                             "output_dir",
+                             "repack_whitelist",
+                             "visibility",
+                           ])
+  }
+
+  if (enable_hidpi) {
+    vortex_repack_percent("${target_name}_200_percent") {
+      percent = "200"
+      forward_variables_from(invoker,
+                             [
+                               "copy_data_to_bundle",
+                               "deps",
+                               "output_dir",
+                               "repack_whitelist",
+                               "visibility",
+                             ])
+    }
+  }
+
+  vortex_extra_paks("${target_name}_extra") {
+    forward_variables_from(invoker,
+                           [
+                             "copy_data_to_bundle",
+                             "deps",
+                             "output_dir",
+                             "repack_whitelist",
+                             "visibility",
+                           ])
+    if (defined(invoker.additional_extra_paks)) {
+      additional_paks = invoker.additional_extra_paks
+    }
+  }
+
+  group(target_name) {
+    forward_variables_from(invoker, [ "deps" ])
+    public_deps = [
+      ":${target_name}_100_percent",
+      ":${target_name}_extra",
+    ]
+    if (enable_hidpi) {
+      public_deps += [ ":${target_name}_200_percent" ]
+    }
+    if (defined(invoker.public_deps)) {
+      public_deps += invoker.public_deps
+    }
+  }
+}
