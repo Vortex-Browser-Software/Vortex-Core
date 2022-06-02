@@ -1,0 +1,38 @@
+import("//vortex/components/ipfs/buildflags/buildflags.gni")
+import("//vortex/components/tor/buildflags/buildflags.gni")
+
+vortex_utility_importer_sources = []
+vortex_utility_importer_deps = []
+vortex_utility_importer_public_deps = [
+  "//vortex/components/services/bat_ads:lib",
+  "//vortex/components/services/bat_ledger:lib",
+]
+
+if (!is_android) {
+  vortex_utility_importer_sources += [
+    "//vortex/utility/importer/vortex_external_process_importer_bridge.cc",
+    "//vortex/utility/importer/vortex_external_process_importer_bridge.h",
+    "//vortex/utility/importer/vortex_profile_import_impl.cc",
+    "//vortex/utility/importer/vortex_profile_import_impl.h",
+    "//vortex/utility/importer/chrome_importer.cc",
+    "//vortex/utility/importer/chrome_importer.h",
+  ]
+
+  vortex_utility_importer_deps += [
+    "//base",
+    "//vortex/common/importer:importer",
+    "//vortex/common/importer:interfaces",
+    "//chrome/app:chromium_strings",
+    "//components/os_crypt",
+    "//components/password_manager/core/browser",
+    "//components/webdata/common",
+  ]
+}
+
+if (enable_tor) {
+  vortex_utility_importer_deps += [ "//vortex/components/services/tor" ]
+}
+
+if (enable_ipfs) {
+  vortex_utility_importer_deps += [ "//vortex/components/services/ipfs" ]
+}

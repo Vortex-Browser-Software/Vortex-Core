@@ -1,0 +1,38 @@
+import("//vortex/components/ipfs/buildflags/buildflags.gni")
+import("//vortex/components/tor/buildflags/buildflags.gni")
+import("//vortex/utility/importer/sources.gni")
+
+vortex_utility_sources = [
+  "//vortex/utility/vortex_content_utility_client.cc",
+  "//vortex/utility/vortex_content_utility_client.h",
+]
+vortex_utility_sources += vortex_utility_importer_sources
+
+vortex_utility_deps = [
+  "//vortex/components/ipfs/buildflags",
+  "//vortex/components/services/bat_ads:lib",
+  "//vortex/components/services/bat_ads/public/interfaces",
+  "//vortex/components/services/bat_ledger:lib",
+  "//vortex/components/services/bat_ledger/public/interfaces",
+  "//vortex/components/tor/buildflags",
+  "//mojo/public/cpp/bindings",
+]
+
+vortex_utility_deps += vortex_utility_importer_deps
+
+if (enable_ipfs) {
+  vortex_utility_deps += [
+    "//vortex/components/services/ipfs",
+    "//vortex/components/services/ipfs/public/mojom",
+  ]
+}
+
+if (enable_tor) {
+  vortex_utility_deps += [
+    "//vortex/components/services/tor",
+    "//vortex/components/services/tor/public/interfaces",
+  ]
+}
+
+vortex_utility_public_deps = []
+vortex_utility_public_deps += vortex_utility_importer_public_deps
