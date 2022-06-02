@@ -1,0 +1,135 @@
+/* Copyright (c) 2022 Vortex Browser. All rights reserved.
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "bat/ads/new_tab_page_ad_info.h"
+
+#include "bat/ads/internal/base/logging_util.h"
+#include "bat/ads/internal/deprecated/json/json_helper.h"
+
+namespace ads {
+
+NewTabPageAdInfo::NewTabPageAdInfo() = default;
+
+NewTabPageAdInfo::NewTabPageAdInfo(const NewTabPageAdInfo& info) = default;
+
+NewTabPageAdInfo::~NewTabPageAdInfo() = default;
+
+bool NewTabPageAdInfo::IsValid() const {
+  if (!AdInfo::IsValid()) {
+    return false;
+  }
+
+  if (company_name.empty() || !image_url.is_valid() || alt.empty() ||
+      wallpapers.empty()) {
+    return false;
+  }
+
+  return true;
+}
+
+std::string NewTabPageAdInfo::ToJson() const {
+  std::string json;
+  SaveToJson(*this, &json);
+  return json;
+}
+
+bool NewTabPageAdInfo::FromJson(const std::string& json) {
+  rapidjson::Document document;
+  document.Parse(json.c_str());
+
+  if (document.HasParseError()) {
+    BLOG(1, helper::JSON::GetLastError(&document));
+    return false;
+  }
+
+  if (document.HasMember("type")) {
+    type = AdType(document["type"].GetString());
+  }
+
+  if (document.HasMember("uuid")) {
+    placement_id = document["uuid"].GetString();
+  }
+
+  if (document.HasMember("creative_instance_id")) {
+    creative_instance_id = document["creative_instance_id"].GetString();
+  }
+
+  if (document.HasMember("creative_set_id")) {
+    creative_set_id = document["creative_set_id"].GetString();
+  }
+
+  if (document.HasMember("campaign_id")) {
+    campaign_id = document["campaign_id"].GetString();
+  }
+
+  if (document.HasMember("advertiser_id")) {
+    advertiser_id = document["advertiser_id"].GetString();
+  }
+
+  if (document.HasMember("segment")) {
+    segment = document["segment"].GetString();
+  }
+
+  if (document.HasMember("company_name")) {
+    company_name = document["company_name"].GetString();
+  }
+
+  if (document.HasMember("image_url")) {
+    image_url = GURL(document["image_url"].GetString());
+  }
+
+  if (document.HasMember("alt")) {
+    alt = document["alt"].GetString();
+  }
+
+
+  if (document.HasMember("target_url")) {
+    target_url = GURL(document["target_url"].GetString());
+  }
+
+  return true;
+}
+
+void SaveToJson(JsonWriter* writer, const NewTabPageAdInfo& info) {
+  writer->StartObject();
+
+  writer->String("type");
+  writer->String(info.type.ToString().c_str());
+
+  writer->String("uuid");
+  writer->String(info.placement_id.c_str());
+
+  writer->String("creative_instance_id");
+  writer->String(info.creative_instance_id.c_str());
+
+  writer->String("creative_set_id");
+  writer->String(info.creative_set_id.c_str());
+
+  writer->String("campaign_id");
+  writer->String(info.campaign_id.c_str());
+
+  writer->String("advertiser_id");
+  writer->String(info.advertiser_id.c_str());
+
+  writer->String("segment");
+  writer->String(info.segment.c_str());
+
+  writer->String("company_name");
+  writer->String(info.company_name.c_str());
+
+  writer->String("image_url");
+  writer->String(info.image_url.spec().c_str());
+
+  writer->String("alt");
+  writer->String(info.alt.c_str());
+
+
+  writer->String("target_url");
+  writer->String(info.target_url.spec().c_str());
+
+  writer->EndObject();
+}
+
+}  // namespace ads
